@@ -9,23 +9,12 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from database import get_db
 from models import Room, Equipment, RoomType
-from schemas import RoomResponse
-
-
-
-
-
 
 router = APIRouter(
     tags=["rooms"]
 )
 
-
-
-
-
 #FILTROWANIE SALI
-
 
 @router.get("/rooms/filter", response_model=List[RoomResponse])
 def filter_rooms(
@@ -53,10 +42,6 @@ def filter_rooms(
     rooms = query.all()
 
     return rooms
-
-
-
-
 
 # CREATE NEW ROOM
 @router.post("/rooms")
@@ -105,17 +90,17 @@ def update_room(
     if not db_room:
         raise HTTPException(status_code=404, detail="Room not found")
 
-    db_room.name = room.nazwa
-    db_room.building = room.budynek
-    db_room.floor = room.pietro
-    db_room.seat_count = room.liczba_miejsc
-    db_room.description = room.opis
-    db_room.type_id = room.id_typu
+    db_room.nazwa = room.name
+    db_room.budynek = room.building
+    db_room.pietro = room.floor
+    db_room.liczba_miejsc = room.seat_count
+    db_room.opis = room.description
+    db_room.id_typu = room.type_id
 
-    if room.wyposazenie is not None:
-        equipment_objs = db.query(Equipment).filter(Equipment.id.in_(room.wyposazenie)).all()
+    if room.equipment is not None:
+        equipment_objs = db.query(Equipment).filter(Equipment.id.in_(room.equipment)).all()
         db_room.equipment = equipment_objs
-
+    
     db.commit()
     db.refresh(db_room)
     return db_room

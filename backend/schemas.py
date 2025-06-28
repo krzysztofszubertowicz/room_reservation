@@ -37,7 +37,7 @@ class RoomCreate(BaseModel):
     description: Optional[str] = None
     building: str
     floor: str
-    equipment: Optional[List[int]] = []
+    equipment: Optional[List[int]] = None
     type_id: Optional[int] = None
 
 class RoomResponse(BaseModel):
