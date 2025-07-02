@@ -15,7 +15,7 @@ params = urllib.parse.quote_plus(
     f"DRIVER=ODBC Driver 18 for SQL Server;"
     f"SERVER={server};DATABASE={database};"
     f"UID={username};PWD={password};"
-    f"Encrypt=yes;TrustServerCertificate=no;"
+    f"Encrypt=no;TrustServerCertificate=yes;"
 )
 
 engine = create_engine(f"mssql+pyodbc:///?odbc_connect={params}")
