@@ -40,6 +40,15 @@ class RoomCreate(BaseModel):
     equipment: Optional[List[int]] = None
     type_id: Optional[int] = None
 
+class RoomUpdate(BaseModel):
+    name: Optional[str] = None
+    seat_count: Optional[int] = None
+    description: Optional[str] = None
+    building: Optional[str] = None
+    floor: Optional[str] = None
+    equipment: Optional[List[int]] = None
+    type_id: Optional[int] = None
+
 class RoomResponse(BaseModel):
     id: int
     name: str

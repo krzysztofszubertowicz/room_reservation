@@ -40,12 +40,13 @@ class RoomType(Base):
 class Room(Base):
     __tablename__ = "sala"
     id = Column("id_sali", Integer, primary_key=True, index=True)
-    name = Column("nazwa", String(255))
-    seat_count = Column("liczba_miejsc", Integer)
-    type_id = Column("id_typu", Integer, ForeignKey("typ_sali.id_typu"))
+    name = Column("nazwa", String)
     building = Column("budynek", String)
     floor = Column("pietro", String)
-    description = Column("opis", Text)
+    seat_count = Column("liczba_miejsc", Integer)
+    description = Column("opis", String)
+    type_id = Column("id_typu", Integer, ForeignKey("typ_sali.id_typu"))
+    # ...
 
     room_type = relationship("RoomType", back_populates="rooms")
     equipment = relationship("Equipment", secondary=room_equipment, back_populates="rooms")

@@ -18,7 +18,7 @@ params = urllib.parse.quote_plus(
     f"Encrypt=no;TrustServerCertificate=yes;"
 )
 
-engine = create_engine(f"mssql+pyodbc:///?odbc_connect={params}")
+engine = create_engine(f"mssql+pyodbc:///?odbc_connect={params}", echo=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 

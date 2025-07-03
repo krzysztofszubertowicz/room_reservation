@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from schemas import RoomCreate, RoomResponse
+from schemas import RoomCreate, RoomUpdate,RoomResponse
 from database import get_db
 from dependencies import get_current_user
 from models import Room, User, Equipment
@@ -9,6 +9,8 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from database import get_db
 from models import Room, Equipment, RoomType
+from sqlalchemy import inspect
+
 
 router = APIRouter(
     tags=["rooms"]
@@ -79,7 +81,7 @@ def get_room(room_id: int, db: Session = Depends(get_db)):
 @router.put("/rooms/{room_id}", response_model=RoomResponse)
 def update_room(
     room_id: int,
-    room: RoomCreate,
+    room: RoomUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -90,17 +92,43 @@ def update_room(
     if not db_room:
         raise HTTPException(status_code=404, detail="Room not found")
 
-    db_room.nazwa = room.name
-    db_room.budynek = room.building
-    db_room.pietro = room.floor
-    db_room.liczba_miejsc = room.seat_count
-    db_room.opis = room.description
-    db_room.id_typu = room.type_id
+    try:
+        # Update basic fields
+        db_room.name = room.name
+        db_room.building = room.building
+        db_room.floor = room.floor
+        db_room.seat_count = room.seat_count
+        db_room.description = room.description
 
-    if room.equipment is not None:
-        equipment_objs = db.query(Equipment).filter(Equipment.id.in_(room.equipment)).all()
-        db_room.equipment = equipment_objs
-    
-    db.commit()
-    db.refresh(db_room)
-    return db_room
+        # Update type if provided
+        if room.type_id is not None:
+            db_room.type_id = room.type_id
+
+        # Update equipment relationship if provided
+        if room.equipment is not None:
+            equipment_objs = db.query(Equipment).filter(Equipment.id.in_(room.equipment)).all()
+            
+            # Validate all equipment IDs exist
+            if len(equipment_objs) != len(room.equipment):
+                raise HTTPException(status_code=400, detail="Some equipment IDs not found")
+            
+            db_room.equipment = equipment_objs
+
+        state = inspect(db_room)
+        print("Is modified?", state.modified)
+        print("Dirty attributes:", state.attrs.items())
+        db.flush()  # try flushing before commit
+        # ✅ Commit the transaction
+        db.commit()
+
+        # ✅ Refresh to get updated data
+        db.refresh(db_room)
+        
+        print(f"Updated room {room_id} with: {room}")
+        return db_room
+
+    except Exception as e:
+        # ✅ Rollback on error
+        print(f"Error updating room {room_id}: {str(e)}")
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to update room: {str(e)}")
