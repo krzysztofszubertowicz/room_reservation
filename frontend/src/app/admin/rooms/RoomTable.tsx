@@ -1,26 +1,49 @@
 "use client";
 import { useState, useEffect } from "react";
-
-type Room = {
-  id: number;
-  name: string;
-  seat_count: number;
-  room_type: { name: string };
-  building: string;
-  floor: string;
-  description: string;
-  status: string | null;
-};
+import AddRoomForm from "./AddRoomForm";
+import EditRoomForm from "./EditRoomForm";
+import { Room } from "./types";
 
 export default function RoomTable({ rooms }: { rooms: Room[] }) {
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
-  const handleClose = () => setSelectedRoom(null);
-  const handleSave = () => {
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [roomList, setRoomList] = useState<Room[]>(rooms);
+
+  useEffect(() => {
+    setRoomList(rooms);
+  }, [rooms]);
+
+  const handleClose = () => {
     setSelectedRoom(null);
+    setShowAddForm(false);
+  };
+
+  const handleSave = async () => {
+    setSelectedRoom(null);
+    setShowAddForm(false);
+    // Odśwież listę sal po dodaniu/edycji
+    setIsLoading(true);
+    try {
+      const res = await fetch("http://localhost:8000/rooms");
+      const data = await res.json();
+      setRoomList(data);
+    } catch (err) {
+      console.error("Błąd przy pobieraniu sal:", err);
+    }
+    setIsLoading(false);
   };
 
   return (
     <>
+      <div className="flex justify-end mb-4">
+        <button
+          className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded"
+          onClick={() => setShowAddForm(true)}
+        >
+          Dodaj salę
+        </button>
+      </div>
       <table className="min-w-full bg-white rounded-lg shadow">
         <thead>
           <tr className="bg-gray-100 text-left">
@@ -34,7 +57,7 @@ export default function RoomTable({ rooms }: { rooms: Room[] }) {
           </tr>
         </thead>
         <tbody>
-          {rooms.map((room) => (
+          {roomList.map((room) => (
             <tr key={room.id} className="border border-gray-200">
               <td className="p-3">{room.name}</td>
               <td className="p-3">
@@ -64,7 +87,6 @@ export default function RoomTable({ rooms }: { rooms: Room[] }) {
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-10 z-50">
           <div className="bg-white p-6 rounded-xl w-full max-w-md shadow-lg">
             <h2 className="text-xl font-semibold mb-4">Edytuj salę</h2>
-
             <EditRoomForm
               room={selectedRoom}
               onClose={handleClose}
@@ -73,134 +95,20 @@ export default function RoomTable({ rooms }: { rooms: Room[] }) {
           </div>
         </div>
       )}
+
+      {showAddForm && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-10 z-50">
+          <div className="bg-white p-6 rounded-xl w-full max-w-md shadow-lg">
+            <h2 className="text-xl font-semibold mb-4">Dodaj salę</h2>
+            <AddRoomForm onClose={handleClose} onSave={handleSave} />
+          </div>
+        </div>
+      )}
+      {isLoading && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-20 z-50">
+          <div className="bg-white p-4 rounded shadow">Ładowanie...</div>
+        </div>
+      )}
     </>
-  );
-}
-
-function EditRoomForm({
-  room,
-  onClose,
-  onSave,
-}: {
-  room: Room;
-  onClose: () => void;
-  onSave: () => void;
-}) {
-  const [formData, setFormData] = useState<Room>(room);
-
-  useEffect(() => {
-    setFormData(room);
-  }, [room]);
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    console.log("Submitting form with data:", formData);
-    const {
-      id,
-      room_type,
-      seat_count,
-      name,
-      description,
-      building,
-      floor,
-      status,
-    } = formData;
-
-    try {
-      await fetch(`http://localhost:8000/rooms/${room.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        },
-        body: JSON.stringify({
-          status,
-          floor,
-          name,
-          description,
-          building,
-          room_type: room_type.name,
-          seat_count: Number(seat_count.toString()),
-        }),
-      });
-      onSave();
-    } catch (error) {
-      console.error("Error updating room:", error);
-    }
-    return false;
-  };
-
-  return (
-    <div>
-      <input
-        name="name"
-        value={formData.name}
-        onChange={handleChange}
-        className="w-full border p-2 rounded mb-3"
-        placeholder="Nazwa sali"
-      />
-      <input
-        name="seat_count"
-        type="number"
-        value={formData.seat_count}
-        onChange={handleChange}
-        className="w-full border p-2 rounded mb-3"
-        placeholder="Pojemność"
-      />
-      <input
-        name="building"
-        value={formData.building}
-        onChange={handleChange}
-        className="w-full border p-2 rounded mb-3"
-        placeholder="Budynek"
-      />
-      <input
-        name="floor"
-        value={formData.floor}
-        onChange={handleChange}
-        className="w-full border p-2 rounded mb-3"
-        placeholder="Piętro"
-      />
-      <textarea
-        name="description"
-        value={formData.description}
-        onChange={handleChange}
-        className="w-full border p-2 rounded mb-3"
-        placeholder="Opis"
-      />
-      <input
-        name="room_type.name"
-        value={formData.room_type.name}
-        onChange={(e) =>
-          setFormData({
-            ...formData,
-            room_type: { name: e.target.value },
-          })
-        }
-        className="w-full border p-2 rounded mb-3"
-        placeholder="Typ sali"
-      />
-
-      <div className="flex justify-end gap-2 mt-4">
-        <button
-          onClick={onClose}
-          className="px-4 py-2 border rounded hover:bg-gray-100 text-gray-600"
-        >
-          Anuluj
-        </button>
-        <button
-          onClick={handleSubmit}
-          className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded"
-        >
-          Zapisz
-        </button>
-      </div>
-    </div>
   );
 }

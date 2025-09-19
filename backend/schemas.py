@@ -36,7 +36,7 @@ class RoomCreate(BaseModel):
     seat_count: int
     description: Optional[str] = None
     building: str
-    floor: Optional[str] = None
+    floor: Optional[int] = None
     equipment: Optional[List[int]] = Field(default=None, alias="equipment")
     type_id: Optional[int] = Field(default=None, alias="type_id")
 
@@ -45,7 +45,7 @@ class RoomUpdate(BaseModel):
     seat_count: Optional[int] = None
     description: Optional[str] = None
     building: Optional[str] = None
-    floor: Optional[str] = None
+    floor: Optional[int] = None
     equipment: Optional[List[int]] = Field(default=None, alias="equipment")
     type_id: Optional[int] = Field(default=None, alias="type_id")
 
@@ -53,7 +53,7 @@ class RoomResponse(BaseModel):
     id: int
     name: str
     building: str
-    floor: Optional[str]
+    floor: Optional[int]
     seat_count: int
     equipment: List[EquipmentSchema] = Field(default_factory=list, alias="equipment")
     type_id: Optional[int] = Field(default=None, alias="type_id")

@@ -42,7 +42,7 @@ class Room(Base):
     id = Column("id_sali", Integer, primary_key=True, index=True)
     name = Column("nazwa", String)
     building = Column("budynek", String)
-    floor = Column("pietro", String)
+    floor = Column("pietro", Integer)
     seat_count = Column("liczba_miejsc", Integer)
     description = Column("opis", String)
     type_id = Column("id_typu", Integer, ForeignKey("typ_sali.id_typu"))
