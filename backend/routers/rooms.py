@@ -48,14 +48,14 @@ def filter_rooms(
 # CREATE NEW ROOM
 @router.post("/rooms")
 async def create_room(room: RoomCreate, db: Session = Depends(get_db)):
-    equipment_objs = db.query(Equipment).filter(Equipment.id.in_(room.wyposazenie or [])).all()
+    equipment_objs = db.query(Equipment).filter(Equipment.id.in_(room.equipment or [])).all()
     db_room = Room(
-        name=room.nazwa,
-        building=room.budynek,
-        floor=room.pietro,
-        seat_count=room.liczba_miejsc,
-        description=room.opis,
-        type_id=room.id_typu,
+        name=room.name,
+        building=room.building,
+        floor=room.floor,
+        seat_count=room.seat_count,
+        description=room.description,
+        type_id=room.type_id if room.type_id is not None else None,
     )
     db_room.equipment = equipment_objs
 
