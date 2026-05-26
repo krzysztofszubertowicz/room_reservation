@@ -8,6 +8,8 @@ from utils.scheduler import start_scheduler
 from database import engine
 from models import Base
 
+from prometheus_fastapi_instrumentator import Instrumentator
+
 # Load environment variables
 load_dotenv()
 
@@ -16,11 +18,12 @@ Base.metadata.create_all(bind=engine)
 
 # Init app
 app = FastAPI()
+Instrumentator().instrument(app).expose(app)
 
 # Enable CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],  # include 127.0.0.1 for some dev setups
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -35,3 +38,10 @@ app.include_router(import_schedule.router)
 
 # Start APScheduler
 start_scheduler()
+
+@app.get("/health")
+def health_check():
+    return {
+        "status": "ok",
+        "service": "room-reservation-backend"
+    }

@@ -13,3 +13,4 @@ openpyxl
 APScheduler
 reportlab
 openpyxl
+prometheus-fastapi-instrumentator
